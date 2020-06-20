@@ -38,7 +38,7 @@ class HomeController < ApplicationController
 
     StackProf.run(mode: :cpu, out: 'tmp/stackprof-cpu-myapp.dump', raw:true) do
       p "Starting Profiler"
-      p fibonacci(43)
+      p fibonacci(42)
       custom_method()
       p "Finish method and profiler"
     end
