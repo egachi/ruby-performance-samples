@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/spiermar/d3-flame-graph@2.0.3/dist/d3-flamegraph.css">
+
+    <style>
+
+    /* Space out content a bit */
+    body {
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+
+    /* Custom page header */
+    .header {
+      padding-bottom: 20px;
+      padding-right: 15px;
+      padding-left: 15px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    /* Make the masthead heading the same height as the navigation */
+    .header h3 {
+      margin-top: 0;
+      margin-bottom: 0;
+      line-height: 40px;
+    }
+
+    /* Customize container */
+    .container {
+      max-width: 990px;
+    }
+
+    address {
+      text-align: right;
+    }
+    </style>
+
+    <title>stackprof (mode: cpu)</title>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="header clearfix">
+        <nav>
+          <div class="pull-right">
+            <form class="form-inline" id="form">
+              <a class="btn" href="javascript: resetZoom();">Reset zoom</a>
+              <a class="btn" href="javascript: clear();">Clear</a>
+              <div class="form-group">
+                <input type="text" class="form-control" id="term">
+              </div>
+              <a class="btn btn-primary" href="javascript: search();">Search</a>
+            </form>
+          </div>
+        </nav>
+        <h3 class="text-muted">stackprof (mode: cpu)</h3>
+      </div>
+      <div id="chart">
+      </div>
+      <address>
+        powered by <a href="https://github.com/spiermar/d3-flame-graph">d3-flame-graph</a>
+      </address>
+      <hr>
+      <div id="details">
+      </div>
+    </div>
+
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+
+    <!-- d3-tip -->
+    <script type="text/javascript" src=https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.min.js></script>
+
+    <!-- d3-flamegraph -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/spiermar/d3-flame-graph@2.0.3/dist/d3-flamegraph.min.js"></script>
+
+    <script type="text/javascript">
+    var flameGraph = d3.flamegraph()
+      .width(960)
+      .cellHeight(18)
+      .transitionDuration(750)
+      .minFrameSize(5)
+      .transitionEase(d3.easeCubic)
+      .sort(true)
+      //Example to sort in reverse order
+      //.sort(function(a,b){ return d3.descending(a.name, b.name);})
+      .title("")
+      .onClick(onClick)
+      .differential(false)
+      .selfValue(false);
+
+
+    // Example on how to use custom tooltips using d3-tip.
+    // var tip = d3.tip()
+    //   .direction("s")
+    //   .offset([8, 0])
+    //   .attr('class', 'd3-flame-graph-tip')
+    //   .html(function(d) { return "name: " + d.data.name + ", value: " + d.data.value; });
+
+    // flameGraph.tooltip(tip);
+
+    var details = document.getElementById("details");
+    flameGraph.setDetailsElement(details);
+
+    // Example on how to use custom labels
+    // var label = function(d) {
+    //  return "name: " + d.name + ", value: " + d.value;
+    // }
+    // flameGraph.label(label);
+
+    // Example of how to set fixed chart height
+    // flameGraph.height(540);
+
+    d3.select("#chart")
+        .datum({"name":"<root>","value":8921,"children":[{"name":"(garbage collection) : ","value":1268,"children":[{"name":"(marking) : ","value":1001,"children":[]},{"name":"(sweeping) : ","value":267,"children":[]}]},{"name":"Puma::ThreadPool#spawn_thread : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/puma-3.12.6/lib/puma/thread_pool.rb","value":7653,"children":[{"name":"Puma::Server#run : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/puma-3.12.6/lib/puma/server.rb","value":7653,"children":[{"name":"Puma::Server#process_client : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/puma-3.12.6/lib/puma/server.rb","value":7653,"children":[{"name":"Puma::Server#handle_request : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/puma-3.12.6/lib/puma/server.rb","value":7653,"children":[{"name":"Puma::Configuration::ConfigMiddleware#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/puma-3.12.6/lib/puma/configuration.rb","value":7653,"children":[{"name":"Rails::Engine#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/railties-5.2.4.3/lib/rails/engine.rb","value":7653,"children":[{"name":"Rack::Sendfile#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/sendfile.rb","value":7653,"children":[{"name":"ActionDispatch::Static#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/static.rb","value":7653,"children":[{"name":"ActionDispatch::Executor#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/executor.rb","value":7653,"children":[{"name":"ActiveSupport::Cache::Strategy::LocalCache::Middleware#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/cache/strategy/local_cache_middleware.rb","value":7653,"children":[{"name":"Rack::Runtime#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/runtime.rb","value":7653,"children":[{"name":"Rack::MethodOverride#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/method_override.rb","value":7653,"children":[{"name":"ActionDispatch::RequestId#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/request_id.rb","value":7653,"children":[{"name":"ActionDispatch::RemoteIp#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/remote_ip.rb","value":7653,"children":[{"name":"Sprockets::Rails::QuietAssets#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/sprockets-rails-3.2.1/lib/sprockets/rails/quiet_assets.rb","value":7653,"children":[{"name":"Rails::Rack::Logger#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/railties-5.2.4.3/lib/rails/rack/logger.rb","value":7653,"children":[{"name":"ActiveSupport::TaggedLogging#tagged : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/tagged_logging.rb","value":7653,"children":[{"name":"ActiveSupport::TaggedLogging::Formatter#tagged : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/tagged_logging.rb","value":7653,"children":[{"name":"ActiveSupport::TaggedLogging#tagged : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/tagged_logging.rb","value":7653,"children":[{"name":"Rails::Rack::Logger#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/railties-5.2.4.3/lib/rails/rack/logger.rb","value":7653,"children":[{"name":"Rails::Rack::Logger#call_app : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/railties-5.2.4.3/lib/rails/rack/logger.rb","value":7653,"children":[{"name":"ActionDispatch::ShowExceptions#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/show_exceptions.rb","value":7653,"children":[{"name":"WebConsole::Middleware#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/web-console-3.7.0/lib/web_console/middleware.rb","value":7653,"children":[{"name":"WebConsole::Middleware#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/web-console-3.7.0/lib/web_console/middleware.rb","value":7653,"children":[{"name":"WebConsole::Middleware#call_app : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/web-console-3.7.0/lib/web_console/middleware.rb","value":7653,"children":[{"name":"ActionDispatch::DebugExceptions#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/debug_exceptions.rb","value":7653,"children":[{"name":"ActionDispatch::Executor#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/executor.rb","value":7653,"children":[{"name":"ActionDispatch::Callbacks#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/callbacks.rb","value":7653,"children":[{"name":"ActiveSupport::Callbacks#run_callbacks : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/callbacks.rb","value":7653,"children":[{"name":"ActionDispatch::Callbacks#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/callbacks.rb","value":7653,"children":[{"name":"ActiveRecord::Migration::CheckPending#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activerecord-5.2.4.3/lib/active_record/migration.rb","value":7653,"children":[{"name":"ActionDispatch::Cookies#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/middleware/cookies.rb","value":7653,"children":[{"name":"Rack::Session::Abstract::Persisted#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/session/abstract/id.rb","value":7653,"children":[{"name":"Rack::Session::Abstract::Persisted#context : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/session/abstract/id.rb","value":7653,"children":[{"name":"ActionDispatch::ContentSecurityPolicy::Middleware#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/http/content_security_policy.rb","value":7653,"children":[{"name":"Rack::Head#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/head.rb","value":7653,"children":[{"name":"Rack::ConditionalGet#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/conditional_get.rb","value":7653,"children":[{"name":"Rack::ETag#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/etag.rb","value":7653,"children":[{"name":"Rack::TempfileReaper#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/rack-2.2.3/lib/rack/tempfile_reaper.rb","value":7653,"children":[{"name":"ActionDispatch::Routing::RouteSet#call : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/routing/route_set.rb","value":7653,"children":[{"name":"ActionDispatch::Journey::Router#serve : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/journey/router.rb","value":7653,"children":[{"name":"ActionDispatch::Journey::Router#serve : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/journey/router.rb","value":7653,"children":[{"name":"ActionDispatch::Routing::RouteSet::Dispatcher#serve : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/routing/route_set.rb","value":7653,"children":[{"name":"ActionDispatch::Routing::RouteSet::Dispatcher#dispatch : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_dispatch/routing/route_set.rb","value":7653,"children":[{"name":"ActionController::Metal.dispatch : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal.rb","value":7653,"children":[{"name":"ActionController::Metal#dispatch : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal.rb","value":7653,"children":[{"name":"ActionView::Rendering#process : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionview-5.2.4.3/lib/action_view/rendering.rb","value":7653,"children":[{"name":"AbstractController::Base#process : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/abstract_controller/base.rb","value":7653,"children":[{"name":"ActiveRecord::Railties::ControllerRuntime#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activerecord-5.2.4.3/lib/active_record/railties/controller_runtime.rb","value":7653,"children":[{"name":"ActionController::ParamsWrapper#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal/params_wrapper.rb","value":7653,"children":[{"name":"ActionController::Instrumentation#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal/instrumentation.rb","value":7653,"children":[{"name":"#<Module:0x0000564e99044190>.instrument : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/notifications.rb","value":7653,"children":[{"name":"ActiveSupport::Notifications::Instrumenter#instrument : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/notifications/instrumenter.rb","value":7653,"children":[{"name":"#<Module:0x0000564e99044190>.instrument : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/notifications.rb","value":7653,"children":[{"name":"ActionController::Instrumentation#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal/instrumentation.rb","value":7653,"children":[{"name":"ActionController::Rescue#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal/rescue.rb","value":7653,"children":[{"name":"AbstractController::Callbacks#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/abstract_controller/callbacks.rb","value":7653,"children":[{"name":"ActiveSupport::Callbacks#run_callbacks : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/callbacks.rb","value":7653,"children":[{"name":"AbstractController::Callbacks#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/abstract_controller/callbacks.rb","value":7653,"children":[{"name":"ActionController::Rendering#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal/rendering.rb","value":7653,"children":[{"name":"AbstractController::Base#process_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/abstract_controller/base.rb","value":7653,"children":[{"name":"ActionController::BasicImplicitRender#send_action : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/actionpack-5.2.4.3/lib/action_controller/metal/basic_implicit_render.rb","value":7653,"children":[{"name":"HomeController#index : /home/edison/codes/ruby/rails-stackprof/app/controllers/home_controller.rb","value":7653,"children":[{"name":"HomeController#index : /home/edison/codes/ruby/rails-stackprof/app/controllers/home_controller.rb","value":7653,"children":[{"name":"HomeController#custom_method : /home/edison/codes/ruby/rails-stackprof/app/controllers/home_controller.rb","value":7653,"children":[{"name":"HomeController#write_to_file : /home/edison/codes/ruby/rails-stackprof/app/controllers/home_controller.rb","value":1059,"children":[{"name":"HomeController#write_to_file : /home/edison/codes/ruby/rails-stackprof/app/controllers/home_controller.rb","value":447,"children":[{"name":"Time#to_formatted_s : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/core_ext/time/conversions.rb","value":230,"children":[]},{"name":"ActiveSupport::NumericWithFormat#to_s : /usr/local/.rbenv/versions/2.6.2/lib/ruby/gems/2.6.0/gems/activesupport-5.2.4.3/lib/active_support/core_ext/numeric/conversions.rb","value":43,"children":[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]})
+        .call(flameGraph);
+
+    document.getElementById("form").addEventListener("submit", function(event){
+      event.preventDefault();
+      search();
+    });
+
+    function search() {
+      var term = document.getElementById("term").value;
+      flameGraph.search(term);
+    }
+
+    function clear() {
+      document.getElementById('term').value = '';
+      flameGraph.clear();
+    }
+
+    function resetZoom() {
+      flameGraph.resetZoom();
+    }
+
+    function onClick(d) {
+      console.info("Clicked on " + d.data.name);
+    }
+    </script>
+  </body>
+</html>
