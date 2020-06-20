@@ -12,7 +12,7 @@ class HomeController < ApplicationController
 
       reportnum = 1
       i = 1
-      num = 214748
+      num = 2147
   
       begin
           reportnum = reportnum * i;      
@@ -22,6 +22,15 @@ class HomeController < ApplicationController
        end until i > num
 
   end
+
+  def fibonacci(n)
+    if (n<=2)
+      return 1
+    else
+      return (fibonacci(n-1)+fibonacci(n-2))
+    end
+  end
+  
   
   def index
 
@@ -29,6 +38,7 @@ class HomeController < ApplicationController
 
     StackProf.run(mode: :cpu, out: 'tmp/stackprof-cpu-myapp.dump', raw:true) do
       p "Starting Profiler"
+      p fibonacci(43)
       custom_method()
       p "Finish method and profiler"
     end
